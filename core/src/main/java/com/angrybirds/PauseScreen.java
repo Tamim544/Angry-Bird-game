@@ -252,7 +252,7 @@ public class PauseScreen implements Screen {
             @Override
             public void clicked(InputEvent event, float x, float y) {
                 handleButtonClick();
-                mainGame.setScreen(new GameScreen(mainGame));
+                mainGame.setScreen(new GameScreen(mainGame, 1));
             }
         });
 
@@ -260,7 +260,7 @@ public class PauseScreen implements Screen {
             @Override
             public void clicked(InputEvent event, float x, float y) {
                 handleButtonClick();
-                mainGame.setScreen(new GameScreen(mainGame));
+                mainGame.setScreen(new GameScreen(mainGame, 1));
             }
         });
 

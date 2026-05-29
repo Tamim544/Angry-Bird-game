@@ -84,7 +84,7 @@ public class LevelEndScreen implements Screen {
             @Override
             public void clicked(InputEvent event, float x, float y) {
                 buttonClickSound.play();
-                mainGame.setScreen(new loadpage(mainGame, new GameScreen(mainGame)));
+                mainGame.setScreen(new loadpage(mainGame, new GameScreen(mainGame, 1)));
             }
         });
 
@@ -93,6 +93,7 @@ public class LevelEndScreen implements Screen {
             @Override
             public void clicked(InputEvent event, float x, float y) {
                 buttonClickSound.play();
+                mainGame.setScreen(new loadpage(mainGame, new GameScreen(mainGame, 2)));
                 // Additional actions can be added here if needed
             }
         });

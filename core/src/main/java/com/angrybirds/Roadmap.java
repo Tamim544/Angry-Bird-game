@@ -255,7 +255,7 @@ public class Roadmap implements Screen {
                         @Override
                         public void clicked(InputEvent event, float x, float y) {
                             buttonClickSound.play();
-                            mainGame.setScreen(new loadpage(mainGame, new LevelEndScreen(mainGame)));
+                            mainGame.setScreen(new loadpage(mainGame, new GameScreen(mainGame, 1)));
                         }
                     });
                 } else if (button.getWidth() == 40.0F) {  // Back button size check

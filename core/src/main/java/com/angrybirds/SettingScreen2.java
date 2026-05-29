@@ -59,7 +59,7 @@ public class SettingScreen2 implements Screen {
         backButton.addListener(new ClickListener() {
             public void clicked(InputEvent event, float x, float y) {
                 buttonClickSound.play();
-                game.setScreen(new GameScreen(game));
+                game.setScreen(new GameScreen(game, 1));
                 game.getPrimaryMusic().setVolume(1.0F);
             }
         });
