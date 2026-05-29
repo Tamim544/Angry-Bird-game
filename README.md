@@ -1,128 +1,126 @@
-# Angry Bird Game
+# Angry Birds Game - Improved with Box2D Physics
 
-A simple 2D Angry Birds–style game implemented in Java. This project contains the game code, assets (sprites, sounds), and basic physics to launch birds, destroy structures, and score points.
+A fully featured, physics-driven 2D clone of the classic **Angry Birds** game, built using **Java**, the **LibGDX** framework, and **Box2D** for high-fidelity physics simulation.
 
-> Note: This README is a general, ready-to-use template. Update sections marked with placeholders (e.g., Main class name, build system) if your repository uses a specific project structure or build tool.
+This project implements realistic bird launching, structures constructed from materials with unique physical properties (Wood, Glass, Stone), destructible entities, collision-based damage calculations, level progression, and comprehensive GUI state management (Main Menu, Settings, Level Selection, Pause, Win/Loss).
 
+---
 
-## Features
-- Launch multiple birds with mouse drag-and-release slingshot mechanic
-- Destructible structures and collision detection
-- Score tracking and simple level progression
-- Simple particle / sound effects (if included)
-- Keyboard shortcuts for quick restart or next level
+## 🎮 Key Features & Gameplay Mechanics
 
-## Requirements
-- Java 8 or later (recommend Java 11+)
+### 1. Box2D Physical Simulation
+*   **Realistic Physics World**: Gravity, mass, density, friction, and restitution (bounciness) are configured to replicate authentic classic gameplay.
+*   **Collision Detection**: Implements a custom `GameContactListener` that dispatches and resolves contacts between birds, blocks, ground, and pigs.
+*   **Contact-Impulse Damage**: Entities take damage based on the relative velocity of the impact. Light taps do nothing, while high-velocity hits damage or instantly shatter targets.
 
-- jbox2d 2.2.1 (physics)
-- javax.sound (audio)
+### 2. Interactive Slingshot & Launch System
+*   **Elastic Drag Limit**: Click and drag the active bird from the slingshot anchor. The drag distance is capped to prevent infinite launch power.
+*   **Trajectory Prediction**: Displays a dotted path representing the bird's predicted flight path under the influence of gravity before launch.
+*   **Camera Tracking**: The camera automatically tracks the bird after launch, panning smoothly to follow the trajectory of destruction.
+*   **Settle/Idle Detection**: The game detects when the launched bird and all moving debris come to a complete rest, prompting the next bird to load or triggering the level-end conditions.
 
-## Getting started
+### 3. Material-Specific Destructible Blocks
+Structures are composed of blocks with distinct behaviors:
+*   🪵 **Wood Blocks**: Medium weight, medium friction, and medium durability. Good general-purpose construction blocks.
+*   🧪 **Glass Blocks**: Lightweight, low friction, and low durability. Extremely easy to break or shatter under impact.
+*   🪨 **Stone Blocks**: Very heavy, high friction, and highly durable. Resistant to standard hits; requires high-speed impacts to break.
 
-### Clone the repo
+### 4. Interactive Screens & State Management
+*   **MainMenuScreen**: Launching point with animated buttons, level selection, and settings.
+*   **GameScreen**: The main gameplay area hosting the Box2D physics loops, rendering layer, and camera controls.
+*   **SettingScreen / SettingsScreen2**: Configures game options like volume and audio controls.
+*   **PauseScreen**: Allows players to pause the action, resume, adjust settings, restart the level, or quit.
+*   **LevelEndScreen**: Triggered upon completion. Shows a success banner if all pigs are popped, or a defeat banner if you run out of birds.
+
+---
+
+## 🛠️ Tech Stack & Requirements
+
+*   **Language**: Java 11 (Supports Java 11+)
+*   **Game Framework**: [LibGDX](https://libgdx.com/) 1.12.1
+*   **Physics Engine**: Box2D (libgdx-box2d)
+*   **Build System**: Gradle 8.10.2
+*   **Desktop Backend**: LWJGL3
+
+---
+
+## 🚀 Getting Started
+
+### 📋 Prerequisites
+Ensure you have the following installed on your system:
+1. **Java Development Kit (JDK 11 or higher)**
+2. A terminal with bash/zsh support (macOS/Linux) or Command Prompt/PowerShell (Windows).
+
+### 📥 Clone the Repository
 ```bash
-git clone https://github.com/TamimCHowdhury61/Angry-Bird-game.git
-cd Angry-Bird-game
+git clone https://github.com/Tamim544/Angry-Bird-game.git
+cd "Angry birds game improved "
 ```
 
-### Build and run (plain Java / javac)
+### ⚙️ Build and Run the Game
 
-1. Compile:
+To launch the desktop launcher directly:
 ```bash
-# create output directory and compile all source files (adjust path if different)
-mkdir -p out
-find src -name "*.java" > sources.txt
-javac -d out @sources.txt
+./gradlew lwjgl3:run
 ```
 
-2. Package (optional):
+To clean and compile all code:
 ```bash
-# create an executable jar (replace <MainClass> with your actual main class)
-jar cfe AngryBirds.jar <MainClass> -C out .
+./gradlew clean build
 ```
 
-3. Run:
-```bash
-java -cp out <MainClass>
-# or if you created a jar:
-java -jar AngryBirds.jar
+---
+
+## 🕹️ Game Controls
+
+| Control | Action |
+| :--- | :--- |
+| **Mouse Click + Drag** | Drag the bird back from the slingshot to aim. |
+| **Release Mouse Click** | Launch the bird into the structures. |
+| **Esc / P** | Pause the game during a level. |
+| **R** | Quickly restart the current level. |
+| **N** | Advance to the next level (when level is cleared). |
+
+---
+
+## 📁 Project Structure
+
+The project follows a standard multi-project Gradle layout recommended by LibGDX:
+
+```
+├── assets/                  # Shared game resources
+│   ├── b.mp3                # Main background music
+│   ├── b2.mp3               # Secondary background music
+│   └── (sprites, fonts, and game assets)
+├── core/                    # Core game code (platform-independent)
+│   └── src/main/java/com/angrybirds/
+│       ├── GameObject.java          # Base physics-sprite bridge class
+│       ├── Bird.java                # Box2D Circular Bird class
+│       ├── Pig.java                 # Pigs with velocity damage models
+│       ├── Block.java               # Materials: Wood, Glass, Stone
+│       ├── Slingshot.java           # Sling anchor and drag limits
+│       ├── GameContactListener.java # Collision-based damage dispatcher
+│       ├── Level.java               # Level builder
+│       ├── LevelFactory.java        # Predefined levels (Level 1 & 2)
+│       ├── GameScreen.java          # Box2D rendering, trajectory, camera
+│       └── MainGame.java            # Main entry point (extends Game)
+├── lwjgl3/                  # Desktop launcher (LWJGL3 backend)
+│   └── src/main/java/com/angrybirds/lwjgl3/
+│       └── Lwjgl3Launcher.java      # Application settings (1280x720 window)
+├── UML diagram.pdf          # Project UML class diagram
+└── build.gradle             # Main build script configuration
 ```
 
+---
 
-### Build and run (Maven or Gradle)
+## 📐 Design Architecture
 
+For a visual breakdown of the structural components and inheritance hierarchies utilized in this project, please refer to the **[UML diagram.pdf](file:///Users/tamimchowdhury/Angry%20birds%20game%20improved%20/UML%20diagram.pdf)** file located in the root of the repository.
 
-Gradle:
-```bash
-./gradlew build
-java -jar build/libs/angry-bird-game.jar
-```
+---
 
+## 👤 Contacts & Credits
 
-### Run from IDE (IntelliJ IDEA / Eclipse)
-- Import the project as a Java project.
-- Ensure the project's SDK is set (Java 8+).
-- Locate the class with `public static void main(String[] args)` and run it using the IDE run configuration.
-
-## Gameplay / Controls
-- Aim and launch: Click and drag the mouse on the bird, then release to launch.
-- Restart level: R
-- Next level: N (if implemented)
-- Toggle sound: M
-- Pause: P or Esc
-
-
-## Project structure
-
-A typical layout :
-- src/ - Java source files
-- assets/ or resources/ - images, sounds, level data
-- docs/ - screenshots, design notes
-- out/ or build/ - compiled output (ignored in VCS)
-- README.md - this file
-
-Example:
-```
-src/
-  com/
-    example/
-      angrybirds/
-        Main.java
-        game/
-        physics/
-assets/
-  images/
-  sounds/
-docs/
-  screenshot-1.png
-```
-
-
-
-## Known issues & roadmap
-- Planned improvements:
-  - Add more levels and level editor
-  - Improve physics with a 3rd-party physics engine (if not used)
-  - Add mobile controls / touch support
-  - Add unit tests and CI (GitHub Actions)
-
-## Testing
-
-```bash
-mvn test
-# or
-./gradlew test
-```
-
-
-## Contact
-Project maintained by TamimCHowdhury61.
-
-If you want to reach out:
-- GitHub: https://github.com/TamimCHowdhury61
-- Email: tamim23544@iiitd.ac.in
-
-## Acknowledgements
-- Inspired by the original Angry Birds game
-
+*   **Developer**: [Tamim544](https://github.com/Tamim544)
+*   **Email**: tamim23544@iiitd.ac.in
+*   **Credits**: Inspired by the classic original Angry Birds by Rovio Entertainment.
