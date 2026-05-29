@@ -11,21 +11,21 @@ import com.badlogic.gdx.math.Vector2;
 public class Slingshot {
     private Vector2 anchorPosition; // Center of slingshot pocket in world coords (meters)
     private Texture texture;
-    private float drawWidth;   // in pixels
-    private float drawHeight;  // in pixels
+    private float drawWidth;   // in meters
+    private float drawHeight;  // in meters
     private static final float MAX_DRAG_DISTANCE = 1.5f; // meters
 
     public Slingshot(Texture texture, float anchorX, float anchorY) {
         this.texture = texture;
         this.anchorPosition = new Vector2(anchorX, anchorY);
-        this.drawWidth = 0.6f * GameObject.PPM;
-        this.drawHeight = 1.5f * GameObject.PPM;
+        this.drawWidth = 0.6f;
+        this.drawHeight = 1.5f;
     }
 
     public void render(SpriteBatch batch) {
-        float px = anchorPosition.x * GameObject.PPM - drawWidth / 2f;
+        float px = anchorPosition.x - drawWidth / 2f;
         // Draw the slingshot base below the anchor point
-        float py = (anchorPosition.y - 0.5f) * GameObject.PPM - drawHeight / 2f;
+        float py = (anchorPosition.y - 0.5f) - drawHeight / 2f;
         batch.draw(texture, px, py, drawWidth, drawHeight);
     }
 

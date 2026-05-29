@@ -29,8 +29,8 @@ public abstract class GameObject {
         this.health = health;
 
         this.sprite = new Sprite(texture);
-        // Sprite size in pixel-units that map to meters via PPM
-        this.sprite.setSize(widthMeters * PPM, heightMeters * PPM);
+        // Sprite size in meters matching Box2D world units
+        this.sprite.setSize(widthMeters, heightMeters);
         this.sprite.setOriginCenter();
 
         // Store a reference back to this GameObject on the body's user data
@@ -41,8 +41,8 @@ public abstract class GameObject {
     public void update() {
         if (body != null) {
             sprite.setPosition(
-                body.getPosition().x * PPM - sprite.getWidth() / 2f,
-                body.getPosition().y * PPM - sprite.getHeight() / 2f
+                body.getPosition().x - width / 2f,
+                body.getPosition().y - height / 2f
             );
             sprite.setRotation(body.getAngle() * MathUtils.radiansToDegrees);
         }

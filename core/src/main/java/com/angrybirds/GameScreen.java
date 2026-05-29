@@ -572,14 +572,14 @@ public class GameScreen implements Screen {
     private void renderGameStateOverlay() {
         if (gameState == GameState.WON) {
             gameBatch.begin();
-            gameBatch.draw(winScreenTexture, 0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+            gameBatch.draw(winScreenTexture, 0, 0, WORLD_WIDTH, WORLD_HEIGHT);
             gameBatch.end();
 
             // Add a delay then transition
             // For now, clicking anywhere goes to level select
         } else if (gameState == GameState.LOST) {
             gameBatch.begin();
-            gameBatch.draw(loseScreenTexture, 0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+            gameBatch.draw(loseScreenTexture, 0, 0, WORLD_WIDTH, WORLD_HEIGHT);
             gameBatch.end();
         }
 
