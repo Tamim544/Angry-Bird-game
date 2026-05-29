@@ -203,12 +203,14 @@ import com.badlogic.gdx.utils.viewport.ScreenViewport;
 public class PauseScreen implements Screen {
     private Stage pauseStage;
     private MainGame mainGame;
+    private GameScreen gameScreen;
     private Texture backgroundTexture, resumeButtonTexture, settingsButtonTexture, menuButtonTexture, restartButtonTexture;
     private Image backgroundImg;
     private Sound buttonSound;
 
-    public PauseScreen(final MainGame mainGame) {
+    public PauseScreen(final MainGame mainGame, GameScreen gameScreen) {
         this.mainGame = mainGame;
+        this.gameScreen = gameScreen;
         loadAssets();
         createPauseStage();
         setupButtons();
@@ -252,7 +254,7 @@ public class PauseScreen implements Screen {
             @Override
             public void clicked(InputEvent event, float x, float y) {
                 handleButtonClick();
-                mainGame.setScreen(new GameScreen(mainGame, 1));
+                mainGame.setScreen(gameScreen);
             }
         });
 
@@ -260,7 +262,7 @@ public class PauseScreen implements Screen {
             @Override
             public void clicked(InputEvent event, float x, float y) {
                 handleButtonClick();
-                mainGame.setScreen(new GameScreen(mainGame, 1));
+                mainGame.setScreen(new GameScreen(mainGame, gameScreen.getLevelNumber()));
             }
         });
 
@@ -268,7 +270,7 @@ public class PauseScreen implements Screen {
             @Override
             public void clicked(InputEvent event, float x, float y) {
                 handleButtonClick();
-                mainGame.setScreen(new SettingScreen2(mainGame));
+                mainGame.setScreen(new settingScreen(mainGame, PauseScreen.this));
             }
         });
 
@@ -300,7 +302,7 @@ public class PauseScreen implements Screen {
     }
 
     private void handleButtonClick() {
-        buttonSound.play();
+        mainGame.playSound(buttonSound);
     }
 
     private void transitionToMainMenu() {
@@ -320,7 +322,9 @@ public class PauseScreen implements Screen {
     }
 
     @Override
-    public void show() {}
+    public void show() {
+        Gdx.input.setInputProcessor(pauseStage);
+    }
 
     @Override
     public void render(float delta) {

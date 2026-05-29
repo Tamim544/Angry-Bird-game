@@ -192,6 +192,7 @@ public class adding implements Screen {
     private MainGame game;
     private Texture desertMapTexture, forestMapTexture, snowMapTexture, backgroundBlur, backButtonTexture;
     private Image desertMap, snowMap, blurBackground;
+    private ImageButton forestButton;
     private Sound buttonSound;
 
     public adding(final MainGame game) {
@@ -210,6 +211,7 @@ public class adding implements Screen {
         setupBackground();
         setupMapImages();
         setupButtons();
+        setupHoverEffects();
 
         // Set input processor
         Gdx.input.setInputProcessor(this.stage);
@@ -228,27 +230,38 @@ public class adding implements Screen {
         desertMap = new Image(desertMapTexture);
         desertMap.setPosition(228, 54);
         desertMap.setSize(189, 311);
+        desertMap.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                game.playSound(buttonSound);
+                game.setScreen(new loadpage(game, new LevelEndScreen(game)));
+            }
+        });
         stage.addActor(desertMap);
 
         // Add snow map image
         snowMap = new Image(snowMapTexture);
         snowMap.setPosition(420, 54);
         snowMap.setSize(189, 311);
+        snowMap.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                game.playSound(buttonSound);
+                game.setScreen(new loadpage(game, new LevelEndScreen(game)));
+            }
+        });
         stage.addActor(snowMap);
-
-        // Apply hover effects
-        applyHoverEffect(desertMap, 189, 311);
-        applyHoverEffect(snowMap, 189, 311);
     }
 
     private void setupButtons() {
         // Set up forest map button
-        ImageButton forestButton = new ImageButton(new TextureRegionDrawable(forestMapTexture));
+        forestButton = new ImageButton(new TextureRegionDrawable(forestMapTexture));
         forestButton.setPosition(-30, -90);
         forestButton.setSize(320, 600);
         forestButton.addListener(new ClickListener() {
             public void clicked(InputEvent event, float x, float y) {
-                buttonSound.play();
+                game.playSound(buttonSound);
+                game.setScreen(new loadpage(game, new LevelEndScreen(game)));
             }
         });
         stage.addActor(forestButton);
@@ -259,58 +272,61 @@ public class adding implements Screen {
         backButton.setSize(40, 120);
         backButton.addListener(new ClickListener() {
             public void clicked(InputEvent event, float x, float y) {
-                buttonSound.play();
+                game.playSound(buttonSound);
                 game.setScreen(new MainMenuScreen(game));
             }
         });
         stage.addActor(backButton);
-
-        // Apply hover effect to forest button with slight rotation
-        applyHoverEffectWithRotation(forestButton, 320, 600);
     }
-    private void applyHoverEffectWithRotation(final ImageButton button, final float originalWidth, final float originalHeight) {
-        button.addListener(new InputListener() {
+    private void setupHoverEffects() {
+        addFocusHoverEffect(forestButton, 320f, 600f);
+        addFocusHoverEffect(desertMap, 189f, 311f);
+        addFocusHoverEffect(snowMap, 189f, 311f);
+    }
+
+    private void addFocusHoverEffect(final Actor targetActor, final float originalWidth, final float originalHeight) {
+        targetActor.setOrigin(originalWidth / 2f, originalHeight / 2f);
+        targetActor.addListener(new InputListener() {
+            @Override
             public void enter(InputEvent event, float x, float y, int pointer, Actor fromActor) {
-                button.addAction(Actions.parallel(
-                    Actions.sizeTo(originalWidth + 20.0F, originalHeight + 20.0F, 0.1F),  // Smooth size change
-                    Actions.moveBy(-10.0F, -10.0F, 0.1F),  // Smooth position change
-                    Actions.rotateBy(10.0F, 0.1F),  // Slight rotation
-                    Actions.fadeIn(0.1F)  // Fade in effect
+                targetActor.clearActions();
+                targetActor.addAction(Actions.parallel(
+                    Actions.scaleTo(1.1f, 1.1f, 0.15f),
+                    Actions.alpha(1.0f, 0.15f),
+                    Actions.rotateTo(3f, 0.15f)
                 ));
+                dimOtherMaps(targetActor);
             }
 
+            @Override
             public void exit(InputEvent event, float x, float y, int pointer, Actor toActor) {
-                button.addAction(Actions.parallel(
-                    Actions.sizeTo(originalWidth, originalHeight, 0.1F),  // Reset size smoothly
-                    Actions.moveBy(10.0F, 10.0F, 0.1F),  // Reset position smoothly
-                    Actions.rotateBy(-10.0F, 0.1F),  // Reset rotation
-                    Actions.fadeOut(0.1F)  // Fade out effect
-                ));
+                restoreAllMaps();
             }
         });
     }
 
-    // Modified hover effect with animation for images
-    private void applyHoverEffect(final Image image, final float originalWidth, final float originalHeight) {
-        image.addListener(new InputListener() {
-            public void enter(InputEvent event, float x, float y, int pointer, Actor fromActor) {
-                image.addAction(Actions.parallel(
-                    Actions.sizeTo(originalWidth + 20.0F, originalHeight + 20.0F, 0.1F),  // Smooth size change
-                    Actions.moveBy(-10.0F, -10.0F, 0.1F),  // Smooth position change
-                    Actions.rotateBy(10.0F, 0.1F),  // Rotate slightly
-                    Actions.fadeIn(0.1F)  // Fade in effect
-                ));
+    private void dimOtherMaps(Actor activeMap) {
+        Actor[] maps = { forestButton, desertMap, snowMap };
+        for (Actor map : maps) {
+            if (map != activeMap && map != null) {
+                map.clearActions();
+                map.addAction(Actions.alpha(0.4f, 0.15f));
             }
+        }
+    }
 
-            public void exit(InputEvent event, float x, float y, int pointer, Actor toActor) {
-                image.addAction(Actions.parallel(
-                    Actions.sizeTo(originalWidth, originalHeight, 0.1F),  // Reset size smoothly
-                    Actions.moveBy(10.0F, 10.0F, 0.1F),  // Reset position smoothly
-                    Actions.rotateBy(-10.0F, 0.1F),  // Reset rotation
-                    Actions.fadeOut(0.1F)  // Fade out effect
+    private void restoreAllMaps() {
+        Actor[] maps = { forestButton, desertMap, snowMap };
+        for (Actor map : maps) {
+            if (map != null) {
+                map.clearActions();
+                map.addAction(Actions.parallel(
+                    Actions.scaleTo(1.0f, 1.0f, 0.15f),
+                    Actions.alpha(1.0f, 0.15f),
+                    Actions.rotateTo(0f, 0.15f)
                 ));
             }
-        });
+        }
     }
 
     @Override

@@ -7,8 +7,20 @@ import com.badlogic.gdx.physics.box2d.*;
  */
 public class GameContactListener implements ContactListener {
 
+    private static float elapsedTime = 0f;
+
+    public static void reset() {
+        elapsedTime = 0f;
+    }
+
+    public static void update(float delta) {
+        elapsedTime += delta;
+    }
+
     @Override
     public void beginContact(Contact contact) {
+        if (elapsedTime < 0.3f) return; // Prevent initial spawn settlement damage
+
         Fixture fixtureA = contact.getFixtureA();
         Fixture fixtureB = contact.getFixtureB();
 
@@ -18,8 +30,8 @@ public class GameContactListener implements ContactListener {
         Object userDataA = bodyA.getUserData();
         Object userDataB = bodyB.getUserData();
 
-        // Get relative velocity of impact
-        float relativeVelocity = bodyA.getLinearVelocity().sub(bodyB.getLinearVelocity()).len();
+        // Get relative velocity of impact safely
+        float relativeVelocity = bodyA.getLinearVelocity().dst(bodyB.getLinearVelocity());
 
         // Apply damage based on what collided
         applyDamage(userDataA, userDataB, relativeVelocity);
@@ -29,21 +41,31 @@ public class GameContactListener implements ContactListener {
     private void applyDamage(Object target, Object impactor, float relativeVelocity) {
         if (target == null) return;
 
-        // Bird hitting a Pig
-        if (target instanceof Pig && impactor instanceof Bird) {
-            ((Pig) target).applyCollisionDamage(relativeVelocity);
+        if (target instanceof Pig) {
+            float coeff = 1.0f;
+            if (impactor instanceof Bird) {
+                coeff = 1.2f;
+            } else if (impactor instanceof Block) {
+                coeff = 1.0f; // Blocks falling on pigs deal full damage for responsive chain-reaction kills
+            } else if (impactor instanceof Pig) {
+                coeff = 0.8f;
+            } else { // ground (null impactor) or other static objects
+                coeff = 1.0f;
+            }
+            ((Pig) target).applyCollisionDamage(relativeVelocity * coeff);
         }
-        // Bird hitting a Block
-        else if (target instanceof Block && impactor instanceof Bird) {
-            ((Block) target).applyCollisionDamage(relativeVelocity);
-        }
-        // Block hitting a Pig (e.g., a block falls on a pig)
-        else if (target instanceof Pig && impactor instanceof Block) {
-            ((Pig) target).applyCollisionDamage(relativeVelocity * 0.7f);
-        }
-        // Block hitting another Block
-        else if (target instanceof Block && impactor instanceof Block) {
-            ((Block) target).applyCollisionDamage(relativeVelocity * 0.3f);
+        else if (target instanceof Block) {
+            float coeff = 1.0f;
+            if (impactor instanceof Bird) {
+                coeff = 1.2f;
+            } else if (impactor instanceof Block) {
+                coeff = 0.6f;
+            } else if (impactor instanceof Pig) {
+                coeff = 0.5f;
+            } else { // ground (null) or other static objects
+                coeff = 0.8f;
+            }
+            ((Block) target).applyCollisionDamage(relativeVelocity * coeff);
         }
     }
 

@@ -85,28 +85,28 @@ public class MainMenuScreen implements Screen {
     private void addListeners() {
         startGameButton.addListener(new ClickListener() {
             public void clicked(InputEvent event, float x, float y) {
-                buttonClickSound.play();
+                mainGame.playSound(buttonClickSound);
                 mainGame.setScreen(new loadpage(mainGame, new Roadmap(mainGame)));
             }
         });
 
         customGameButton.addListener(new ClickListener() {
             public void clicked(InputEvent event, float x, float y) {
-                buttonClickSound.play();
+                mainGame.playSound(buttonClickSound);
                 mainGame.setScreen(new loadpage(mainGame, new adding(mainGame)));
             }
         });
 
         settingsButton.addListener(new ClickListener() {
             public void clicked(InputEvent event, float x, float y) {
-                buttonClickSound.play();
+                mainGame.playSound(buttonClickSound);
                 mainGame.setScreen(new settingScreen(mainGame));
             }
         });
 
         exitGameButton.addListener(new ClickListener() {
             public void clicked(InputEvent event, float x, float y) {
-                buttonClickSound.play();
+                mainGame.playSound(buttonClickSound);
                 Gdx.app.exit();
             }
         });
@@ -128,7 +128,9 @@ public class MainMenuScreen implements Screen {
     }
 
     @Override
-    public void show() {}
+    public void show() {
+        Gdx.input.setInputProcessor(this.mainStage);
+    }
 
     @Override
     public void pause() {}

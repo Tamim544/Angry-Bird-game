@@ -54,6 +54,7 @@ public class GameScreen implements Screen {
     private SpriteBatch gameBatch;
     private ShapeRenderer shapeRenderer;
     private Box2DDebugRenderer debugRenderer;
+    private InputMultiplexer inputMultiplexer;
     private boolean showDebug = false;
 
     // UI layer
@@ -64,12 +65,13 @@ public class GameScreen implements Screen {
 
     // Textures
     private Texture backgroundTexture;
-    private Texture birdTexture, pigTexture;
+    private Texture birdTexture, yellowBirdTexture, pigTexture;
     private Texture woodTexture, glassTexture, stoneTexture;
     private Texture slingshotTexture;
     private Texture pauseIconTexture;
     private Texture groundTexture;
     private Texture winScreenTexture, loseScreenTexture;
+    private Texture replayBtnTexture, menuBtnTexture, nextBtnTexture;
 
     // Game objects
     private Level level;
@@ -94,7 +96,7 @@ public class GameScreen implements Screen {
     private enum GameState { AIMING, BIRD_FLYING, WAITING, WON, LOST }
     private GameState gameState = GameState.AIMING;
     private float waitTimer = 0f;
-    private static final float WAIT_AFTER_SETTLE = 1.5f;
+    private static final float WAIT_AFTER_SETTLE = 0.5f;
 
     // Sound
     private Sound tapSound;
@@ -126,6 +128,7 @@ public class GameScreen implements Screen {
         Box2D.init();
         world = new World(new Vector2(0, -9.8f), true);
         world.setContactListener(new GameContactListener());
+        GameContactListener.reset(); // Reset contact listener startup clock
         debugRenderer = new Box2DDebugRenderer();
     }
 
@@ -140,25 +143,30 @@ public class GameScreen implements Screen {
     }
 
     private void initTextures() {
-        // Use existing background or create a solid sky-blue
-        backgroundTexture = new Texture(Gdx.files.internal("background.png"));
+        backgroundTexture = new Texture(Gdx.files.internal("game_background.png"));
 
-        // For now, use simple colored textures — we'll use the programmatic ones
-        birdTexture = createColorTexture(220, 50, 50);       // Red bird
-        pigTexture = createColorTexture(80, 180, 80);        // Green pig
-        woodTexture = createColorTexture(160, 110, 50);      // Brown wood
-        glassTexture = createColorTexture(150, 210, 240);    // Light blue glass
-        stoneTexture = createColorTexture(130, 130, 130);    // Gray stone
-        groundTexture = createColorTexture(100, 160, 60);    // Green ground
-        slingshotTexture = createColorTexture(90, 60, 30);   // Dark brown slingshot
+        birdTexture = new Texture(Gdx.files.internal("red_bird.png"));
+        yellowBirdTexture = new Texture(Gdx.files.internal("yellow_bird.png"));
+        pigTexture = new Texture(Gdx.files.internal("green_pig.png"));
+        
+        woodTexture = new Texture(Gdx.files.internal("wood_block.png"));
+        stoneTexture = new Texture(Gdx.files.internal("stone_block.png"));
+        glassTexture = new Texture(Gdx.files.internal("wood_block.png")); // Fallback
+
+        groundTexture = createColorTexture(100, 160, 60);    // Keep programmatic green ground
+        slingshotTexture = createColorTexture(90, 60, 30);   // Keep programmatic brown slingshot
 
         pauseIconTexture = new Texture(Gdx.files.internal("GameScreen/p.png"));
         winScreenTexture = new Texture(Gdx.files.internal("GameScreen/victory.png"));
         loseScreenTexture = new Texture(Gdx.files.internal("GameScreen/loose.png"));
+        replayBtnTexture = new Texture(Gdx.files.internal("GameScreen/R.png"));
+        menuBtnTexture = new Texture(Gdx.files.internal("GameScreen/MM.png"));
+        nextBtnTexture = new Texture(Gdx.files.internal("GameScreen/c.png"));
 
         tapSound = Gdx.audio.newSound(Gdx.files.internal("button.mp3"));
 
         font = new BitmapFont();
+        font.getRegion().getTexture().setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
         font.setColor(Color.WHITE);
         glyphLayout = new GlyphLayout();
     }
@@ -179,10 +187,13 @@ public class GameScreen implements Screen {
         Level levelData;
         switch (levelNumber) {
             case 2: levelData = LevelFactory.createLevel2(); break;
+            case 3: levelData = LevelFactory.createLevel3(); break;
+            case 4: levelData = LevelFactory.createLevel4(); break;
+            case 5: levelData = LevelFactory.createLevel5(); break;
             default: levelData = LevelFactory.createLevel1(); break;
         }
 
-        levelData.build(world, birdTexture, pigTexture, woodTexture, glassTexture, stoneTexture, slingshotTexture);
+        levelData.build(world, birdTexture, yellowBirdTexture, pigTexture, woodTexture, glassTexture, stoneTexture, slingshotTexture);
 
         this.level = levelData;
         this.slingshot = levelData.getSlingshot();
@@ -209,18 +220,18 @@ public class GameScreen implements Screen {
         pauseBtn.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                tapSound.play();
-                appInstance.setScreen(new PauseScreen(appInstance));
+                appInstance.playSound(tapSound);
+                appInstance.setScreen(new PauseScreen(appInstance, GameScreen.this));
             }
         });
         uiStage.addActor(pauseBtn);
     }
 
     private void initInput() {
-        InputMultiplexer multiplexer = new InputMultiplexer();
-        multiplexer.addProcessor(uiStage); // UI first priority
-        multiplexer.addProcessor(new GameInputProcessor());
-        Gdx.input.setInputProcessor(multiplexer);
+        inputMultiplexer = new InputMultiplexer();
+        inputMultiplexer.addProcessor(uiStage); // UI first priority
+        inputMultiplexer.addProcessor(new GameInputProcessor());
+        Gdx.input.setInputProcessor(inputMultiplexer);
     }
 
     // ============ GAME INPUT PROCESSOR ============
@@ -279,7 +290,7 @@ public class GameScreen implements Screen {
             gameState = GameState.BIRD_FLYING;
             followingBird = true;
 
-            tapSound.play();
+            appInstance.playSound(tapSound);
 
             return true;
         }
@@ -330,6 +341,9 @@ public class GameScreen implements Screen {
     }
 
     private void update(float delta) {
+        // Update contact listener clock
+        GameContactListener.update(delta);
+
         // Step physics
         accumulator += delta;
         while (accumulator >= TIME_STEP) {
@@ -339,6 +353,9 @@ public class GameScreen implements Screen {
 
         // Remove destroyed bodies
         removeDeadBodies();
+
+        // Check if all pigs are dead
+        checkWinCondition();
 
         // Update game state
         switch (gameState) {
@@ -373,6 +390,7 @@ public class GameScreen implements Screen {
 
         // Check if bird settled
         if (currentBird.isSettled()) {
+            currentBird.takeDamage(999); // Vanish / destroy the settled bird body
             advanceToNextBird();
         }
     }
@@ -406,6 +424,24 @@ public class GameScreen implements Screen {
         }
     }
 
+    private void checkWinCondition() {
+        if (gameState == GameState.WON || gameState == GameState.LOST) {
+            return;
+        }
+
+        boolean allPigsDead = true;
+        for (Pig pig : pigs) {
+            if (pig.isAlive()) {
+                allPigsDead = false;
+                break;
+            }
+        }
+
+        if (allPigsDead) {
+            gameState = GameState.WON;
+        }
+    }
+
     private void updateWaiting(float delta) {
         waitTimer += delta;
         if (waitTimer >= WAIT_AFTER_SETTLE) {
@@ -425,6 +461,12 @@ public class GameScreen implements Screen {
         for (Pig pig : pigs) {
             if (pig.isMarkedForRemoval() && pig.getBody() != null) {
                 bodiesToRemove.add(pig.getBody());
+            }
+        }
+        for (Bird bird : birds) {
+            if (bird.isMarkedForRemoval() && bird.getBody() != null) {
+                bodiesToRemove.add(bird.getBody());
+                bird.body = null;
             }
         }
 
@@ -476,14 +518,16 @@ public class GameScreen implements Screen {
     // ============ RENDERING ============
 
     private void renderBackground() {
-        // Draw sky background filling the viewport
-        gameBatch.draw(backgroundTexture, 0, 0, WORLD_WIDTH, WORLD_HEIGHT);
+        // Draw sky background filling the viewport relative to camera
+        float camX = gameCamera.position.x - WORLD_WIDTH / 2f;
+        float camY = gameCamera.position.y - WORLD_HEIGHT / 2f;
+        gameBatch.draw(backgroundTexture, camX, camY, WORLD_WIDTH, WORLD_HEIGHT);
     }
 
     private void renderGround() {
-        // Draw ground as a green strip
-        float groundHeight = level.getGroundY() + 0.2f; // top of ground body + half-height
-        gameBatch.draw(groundTexture, 0, 0, WORLD_WIDTH, groundHeight);
+        // Draw ground as a green strip covering the whole level width
+        float groundHeight = level.getGroundY() + 0.2f;
+        gameBatch.draw(groundTexture, 0, 0, 30f, groundHeight); // 30f ensures it's wide enough
     }
 
     private void renderGameObjects() {
@@ -570,31 +614,98 @@ public class GameScreen implements Screen {
     }
 
     private void renderGameStateOverlay() {
-        if (gameState == GameState.WON) {
-            gameBatch.begin();
-            gameBatch.draw(winScreenTexture, 0, 0, WORLD_WIDTH, WORLD_HEIGHT);
-            gameBatch.end();
-
-            // Add a delay then transition
-            // For now, clicking anywhere goes to level select
-        } else if (gameState == GameState.LOST) {
-            gameBatch.begin();
-            gameBatch.draw(loseScreenTexture, 0, 0, WORLD_WIDTH, WORLD_HEIGHT);
-            gameBatch.end();
+        if (gameState != GameState.WON && gameState != GameState.LOST) {
+            return;
         }
 
-        // Handle win/lose screen clicks
-        if (gameState == GameState.WON || gameState == GameState.LOST) {
-            if (Gdx.input.justTouched()) {
-                appInstance.setScreen(new LevelEndScreen(appInstance));
+        float camX = gameCamera.position.x - WORLD_WIDTH / 2f;
+        float camY = gameCamera.position.y - WORLD_HEIGHT / 2f;
+
+        // 1. Draw dark background overlay
+        Gdx.gl.glEnable(GL20.GL_BLEND);
+        shapeRenderer.setProjectionMatrix(gameCamera.combined);
+        shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
+        shapeRenderer.setColor(0f, 0f, 0f, 0.5f);
+        shapeRenderer.rect(camX, camY, WORLD_WIDTH, WORLD_HEIGHT);
+        shapeRenderer.end();
+
+        // 2. Draw centered dialog banner
+        float bannerW = 5.0f;
+        float bannerH = 3.3f;
+        float bx = camX + (WORLD_WIDTH - bannerW) / 2f;
+        float by = camY + (WORLD_HEIGHT - bannerH) / 2f + 0.4f;
+
+        gameBatch.begin();
+        if (gameState == GameState.WON) {
+            gameBatch.draw(winScreenTexture, bx, by, bannerW, bannerH);
+        } else {
+            gameBatch.draw(loseScreenTexture, bx, by, bannerW, bannerH);
+        }
+
+        // 3. Draw buttons below banner
+        float btnSize = 0.8f;
+        float btnY = by - 0.9f;
+        boolean hasNextButton = (gameState == GameState.WON && levelNumber < 5);
+
+        float menuBtnX, replayBtnX, nextBtnX = 0f;
+
+        if (hasNextButton) {
+            float spacing = 0.5f;
+            float totalW = 3 * btnSize + 2 * spacing;
+            float startX = camX + (WORLD_WIDTH - totalW) / 2f;
+            menuBtnX = startX;
+            replayBtnX = startX + btnSize + spacing;
+            nextBtnX = startX + 2 * (btnSize + spacing);
+
+            gameBatch.draw(menuBtnTexture, menuBtnX, btnY, btnSize, btnSize);
+            gameBatch.draw(replayBtnTexture, replayBtnX, btnY, btnSize, btnSize);
+            gameBatch.draw(nextBtnTexture, nextBtnX, btnY, btnSize, btnSize);
+        } else {
+            float spacing = 0.5f;
+            float totalW = 2 * btnSize + spacing;
+            float startX = camX + (WORLD_WIDTH - totalW) / 2f;
+            menuBtnX = startX;
+            replayBtnX = startX + btnSize + spacing;
+
+            gameBatch.draw(menuBtnTexture, menuBtnX, btnY, btnSize, btnSize);
+            gameBatch.draw(replayBtnTexture, replayBtnX, btnY, btnSize, btnSize);
+        }
+        gameBatch.end();
+
+        // 4. Handle button clicks
+        if (Gdx.input.justTouched()) {
+            Vector3 touchPoint = new Vector3(Gdx.input.getX(), Gdx.input.getY(), 0);
+            gameCamera.unproject(touchPoint);
+
+            if (isTouched(touchPoint.x, touchPoint.y, menuBtnX, btnY, btnSize, btnSize)) {
+                appInstance.playSound(tapSound);
+                appInstance.setScreen(new loadpage(appInstance, new LevelEndScreen(appInstance)));
+            } else if (isTouched(touchPoint.x, touchPoint.y, replayBtnX, btnY, btnSize, btnSize)) {
+                appInstance.playSound(tapSound);
+                appInstance.setScreen(new loadpage(appInstance, new GameScreen(appInstance, levelNumber)));
+            } else if (hasNextButton && isTouched(touchPoint.x, touchPoint.y, nextBtnX, btnY, btnSize, btnSize)) {
+                appInstance.playSound(tapSound);
+                appInstance.setScreen(new loadpage(appInstance, new GameScreen(appInstance, levelNumber + 1)));
             }
         }
+    }
+
+    private boolean isTouched(float tx, float ty, float bx, float by, float bw, float bh) {
+        return tx >= bx && tx <= bx + bw && ty >= by && ty <= by + bh;
     }
 
     // ============ SCREEN LIFECYCLE ============
 
     @Override
-    public void show() {}
+    public void show() {
+        if (inputMultiplexer != null) {
+            Gdx.input.setInputProcessor(inputMultiplexer);
+        }
+    }
+
+    public int getLevelNumber() {
+        return levelNumber;
+    }
 
     @Override
     public void resize(int width, int height) {
@@ -638,6 +749,9 @@ public class GameScreen implements Screen {
         if (pauseIconTexture != null) pauseIconTexture.dispose();
         if (winScreenTexture != null) winScreenTexture.dispose();
         if (loseScreenTexture != null) loseScreenTexture.dispose();
+        if (replayBtnTexture != null) replayBtnTexture.dispose();
+        if (menuBtnTexture != null) menuBtnTexture.dispose();
+        if (nextBtnTexture != null) nextBtnTexture.dispose();
         if (tapSound != null) tapSound.dispose();
     }
 }

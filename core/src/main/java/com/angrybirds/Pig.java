@@ -9,8 +9,8 @@ import com.badlogic.gdx.physics.box2d.*;
  */
 public class Pig extends GameObject {
 
-    private static final int DEFAULT_HEALTH = 100;
-    private static final float DAMAGE_VELOCITY_THRESHOLD = 2.0f;
+    private static final int DEFAULT_HEALTH = 10;
+    private static final float DAMAGE_VELOCITY_THRESHOLD = 0.5f;
 
     public Pig(World world, Texture texture, float x, float y, float radius) {
         super(createBody(world, x, y, radius), texture, radius * 2, radius * 2, DEFAULT_HEALTH);

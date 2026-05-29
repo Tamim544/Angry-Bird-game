@@ -19,8 +19,8 @@ public class Bird extends GameObject {
     private boolean launched = false;
     private boolean settled = false;
     private float settledTimer = 0f;
-    private static final float SETTLE_TIME = 2.0f; // seconds after landing before considered done
-    private static final float SETTLE_VELOCITY_THRESHOLD = 0.3f;
+    private static final float SETTLE_TIME = 0.6f; // seconds after landing before considered done
+    private static final float SETTLE_VELOCITY_THRESHOLD = 0.4f;
 
     public Bird(World world, Texture texture, float x, float y, float radius, BirdType type) {
         super(createBody(world, x, y, radius), texture, radius * 2, radius * 2, 1);

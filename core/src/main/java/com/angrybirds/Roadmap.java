@@ -190,6 +190,7 @@ public class Roadmap implements Screen {
     private MainGame mainGame;
     private Texture dayMapTexture, forestMapTexture, seaMapTexture, blurTexture, selectMapTexture, backTexture;
     private Image dayMapImage, seaMapImage, blurImage, selectMapImage, forestMapImage;
+    private ImageButton forestButton;
     private Sound buttonClickSound;
 
     public Roadmap(final MainGame mainGame) {
@@ -197,7 +198,7 @@ public class Roadmap implements Screen {
         roadmapStage = new Stage(new ScreenViewport());
         loadAssets();
         createUIComponents();
-        setupButtonListeners();
+        setupClickListeners();
         setupHoverEffects();
         Gdx.input.setInputProcessor(roadmapStage);
     }
@@ -220,8 +221,17 @@ public class Roadmap implements Screen {
         selectMapImage = createImage(selectMapTexture, 224.0F, 405.0F, 180.0F, 80.0F);
 
         // Create buttons and position them
-        ImageButton forestButton = createButton(forestMapTexture, 2.0F, 65.0F, 250.0F, 380.0F);
+        forestButton = createButton(forestMapTexture, 2.0F, 65.0F, 250.0F, 380.0F);
         ImageButton backButton = createButton(backTexture, 20.0F, 380.0F, 40.0F, 120.0F);
+
+        // Add back button click listener
+        backButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                mainGame.playSound(buttonClickSound);
+                mainGame.setScreen(new loadpage(mainGame, new MainMenuScreen(mainGame)));
+            }
+        });
 
         // Add all components to the stage
         roadmapStage.addActor(blurImage);
@@ -246,91 +256,87 @@ public class Roadmap implements Screen {
         return button;
     }
 
-    private void setupButtonListeners() {
-        roadmapStage.getActors().forEach(actor -> {
-            if (actor instanceof ImageButton) {
-                ImageButton button = (ImageButton) actor;
-                if (button.getWidth() == 250.0F) {  // Forest button size check
-                    button.addListener(new ClickListener() {
-                        @Override
-                        public void clicked(InputEvent event, float x, float y) {
-                            buttonClickSound.play();
-                            mainGame.setScreen(new loadpage(mainGame, new GameScreen(mainGame, 1)));
-                        }
-                    });
-                } else if (button.getWidth() == 40.0F) {  // Back button size check
-                    button.addListener(new ClickListener() {
-                        @Override
-                        public void clicked(InputEvent event, float x, float y) {
-                            buttonClickSound.play();
-                            mainGame.setScreen(new loadpage(mainGame, new MainMenuScreen(mainGame)));
-                        }
-                    });
-                }
+    private void setupClickListeners() {
+        forestButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                mainGame.playSound(buttonClickSound);
+                mainGame.setScreen(new loadpage(mainGame, new LevelEndScreen(mainGame)));
+            }
+        });
+
+        dayMapImage.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                mainGame.playSound(buttonClickSound);
+                mainGame.setScreen(new loadpage(mainGame, new LevelEndScreen(mainGame)));
+            }
+        });
+
+        seaMapImage.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                mainGame.playSound(buttonClickSound);
+                mainGame.setScreen(new loadpage(mainGame, new LevelEndScreen(mainGame)));
             }
         });
     }
 
     private void setupHoverEffects() {
-        roadmapStage.getActors().forEach(actor -> {
-            if (actor instanceof ImageButton && ((ImageButton) actor).getWidth() == 250.0F) {
-                addHoverEffectToButton((ImageButton) actor, 250.0F, 380.0F);
-            } else if (actor instanceof Image && actor.getWidth() == 220.0F) {  // Check size to target specific images
-                addHoverEffectToImage((Image) actor, 220.0F, 285.0F);
-            }
-        });
+        addFocusHoverEffect(forestButton, 250f, 380f);
+        addFocusHoverEffect(dayMapImage, 220f, 285f);
+        addFocusHoverEffect(seaMapImage, 220f, 285f);
     }
 
-    private void addHoverEffectToButton(final ImageButton button, final float originalWidth, final float originalHeight) {
-        button.addListener(new InputListener() {
+    private void addFocusHoverEffect(final Actor targetActor, final float originalWidth, final float originalHeight) {
+        targetActor.setOrigin(originalWidth / 2f, originalHeight / 2f);
+        targetActor.addListener(new InputListener() {
             @Override
             public void enter(InputEvent event, float x, float y, int pointer, Actor fromActor) {
-                button.addAction(Actions.parallel(
-                    Actions.sizeTo(originalWidth + 20.0F, originalHeight + 20.0F, 0.1F),
-                    Actions.moveBy(-10.0F, -10.0F, 0.1F),
-                    Actions.rotateBy(10.0F, 0.1F),
-                    Actions.fadeIn(0.1F)
+                targetActor.clearActions();
+                targetActor.addAction(Actions.parallel(
+                    Actions.scaleTo(1.1f, 1.1f, 0.15f),
+                    Actions.alpha(1.0f, 0.15f),
+                    Actions.rotateTo(3f, 0.15f)
                 ));
+                dimOtherMaps(targetActor);
             }
 
             @Override
             public void exit(InputEvent event, float x, float y, int pointer, Actor toActor) {
-                button.addAction(Actions.parallel(
-                    Actions.sizeTo(originalWidth, originalHeight, 0.1F),
-                    Actions.moveBy(10.0F, 10.0F, 0.1F),
-                    Actions.rotateBy(-10.0F, 0.1F),
-                    Actions.fadeOut(0.1F)
-                ));
+                restoreAllMaps();
             }
         });
     }
 
-    private void addHoverEffectToImage(final Image image, final float originalWidth, final float originalHeight) {
-        image.addListener(new InputListener() {
-            @Override
-            public void enter(InputEvent event, float x, float y, int pointer, Actor fromActor) {
-                image.addAction(Actions.parallel(
-                    Actions.sizeTo(originalWidth + 20.0F, originalHeight + 20.0F, 0.1F),
-                    Actions.moveBy(-10.0F, -10.0F, 0.1F),
-                    Actions.rotateBy(10.0F, 0.1F),
-                    Actions.fadeIn(0.1F)
-                ));
+    private void dimOtherMaps(Actor activeMap) {
+        Actor[] maps = { forestButton, dayMapImage, seaMapImage };
+        for (Actor map : maps) {
+            if (map != activeMap && map != null) {
+                map.clearActions();
+                map.addAction(Actions.alpha(0.4f, 0.15f));
             }
+        }
+    }
 
-            @Override
-            public void exit(InputEvent event, float x, float y, int pointer, Actor toActor) {
-                image.addAction(Actions.parallel(
-                    Actions.sizeTo(originalWidth, originalHeight, 0.1F),
-                    Actions.moveBy(10.0F, 10.0F, 0.1F),
-                    Actions.rotateBy(-10.0F, 0.1F),
-                    Actions.fadeOut(0.1F)
+    private void restoreAllMaps() {
+        Actor[] maps = { forestButton, dayMapImage, seaMapImage };
+        for (Actor map : maps) {
+            if (map != null) {
+                map.clearActions();
+                map.addAction(Actions.parallel(
+                    Actions.scaleTo(1.0f, 1.0f, 0.15f),
+                    Actions.alpha(1.0f, 0.15f),
+                    Actions.rotateTo(0f, 0.15f)
                 ));
             }
-        });
+        }
     }
 
     @Override
-    public void show() {}
+    public void show() {
+        Gdx.input.setInputProcessor(roadmapStage);
+    }
 
     @Override
     public void render(float delta) {

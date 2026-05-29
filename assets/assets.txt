@@ -35,6 +35,7 @@ Settings/6.png
 Settings/blur.png
 Start Game.png
 TM.png
+angrybirds.png
 b.mp3
 b2.mp3
 background.png
@@ -47,6 +48,8 @@ c8.png
 dmap.png
 file 1.png
 fmap.png
+game_background.png
+green_pig.png
 level1.png
 level2.png
 level3.png
@@ -65,6 +68,10 @@ loading/6.jpg
 loading/7.jpg
 loading/8.jpg
 loading/9.jpg
+red_bird.png
 selectlevel.png
 smap.png
+stone_block.png
 version 1.1.png
+wood_block.png
+yellow_bird.png

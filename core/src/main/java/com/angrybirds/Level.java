@@ -84,7 +84,7 @@ public class Level {
     /**
      * Build all Box2D bodies and game objects for this level.
      */
-    public void build(World world, Texture birdTexture, Texture pigTexture,
+    public void build(World world, Texture redBirdTexture, Texture yellowBirdTexture, Texture pigTexture,
                       Texture woodTexture, Texture glassTexture, Texture stoneTexture,
                       Texture slingshotTexture) {
 
@@ -99,7 +99,8 @@ public class Level {
         for (int i = 0; i < birdTypes.size(); i++) {
             float birdX = slingshotPos.x - 1.0f - (i * 0.7f);
             float birdY = groundY + birdRadius;
-            Bird bird = new Bird(world, birdTexture, birdX, birdY, birdRadius, birdTypes.get(i));
+            Texture tex = (birdTypes.get(i) == Bird.BirdType.YELLOW) ? yellowBirdTexture : redBirdTexture;
+            Bird bird = new Bird(world, tex, birdX, birdY, birdRadius, birdTypes.get(i));
             birds.add(bird);
         }
 

@@ -46,6 +46,7 @@ package com.angrybirds;
 import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.audio.Music;
+import com.badlogic.gdx.audio.Sound;
 
 public class MainGame extends Game {
     private Music primaryMusic;
@@ -60,7 +61,7 @@ public class MainGame extends Game {
         secondaryMusic = Gdx.audio.newMusic(Gdx.files.internal("b2.mp3"));
 
         primaryMusic.setLooping(true);
-        primaryMusic.setVolume(1.0F);
+        primaryMusic.setVolume(musicVolume);
         primaryMusic.play();
 
         setScreen(new MainMenuScreen(this));
@@ -76,6 +77,44 @@ public class MainGame extends Game {
 
     public Music getPrimaryMusic() {
         return primaryMusic;
+    }
+
+    private float musicVolume = 0.8f;
+    private boolean musicMuted = false;
+
+    public float getMusicVolume() {
+        return musicVolume;
+    }
+
+    public void setMusicVolume(float volume) {
+        this.musicVolume = volume;
+        updateMusicVolumes();
+    }
+
+    public boolean isMusicMuted() {
+        return musicMuted;
+    }
+
+    public void setMusicMuted(boolean muted) {
+        this.musicMuted = muted;
+        updateMusicVolumes();
+    }
+
+    public void updateMusicVolumes() {
+        float activeVolume = musicMuted ? 0f : musicVolume;
+        if (primaryMusic != null) {
+            primaryMusic.setVolume(activeVolume);
+        }
+        if (secondaryMusic != null) {
+            secondaryMusic.setVolume(activeVolume);
+        }
+    }
+
+    public void playSound(Sound sound) {
+        if (sound != null) {
+            float activeVolume = musicMuted ? 0f : musicVolume;
+            sound.play(activeVolume);
+        }
     }
 
     @Override
